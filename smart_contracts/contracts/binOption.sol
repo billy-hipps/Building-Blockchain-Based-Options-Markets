@@ -7,11 +7,13 @@ interface ERC20Interface {
     function balanceOf(address account) external view returns (uint balance);
     function allowance(address owner, address sender) external view returns (uint remaining);
     function transfer(address recipient, uint amount) external returns (bool success);
-    function approve(address spender, uint amount) external returns (bool success);
+    function approve(address buyer, uint amount) external returns (bool success);
     function transferFrom(address sender, address recipient, uint amount) external returns (bool success);
+    //function terminate(address owner, address recipient, uint payOff;) external returns (bool success);
 
     event Transfer(address indexed from, address indexed to, uint value);
-    event Approval(address indexed owner, address indexed spender, uint value);
+    event Approval(address indexed owner, address indexed buyer, uint value);
+    //event Terminmation(address indexed owner, address indexed buyer, uint payOff;);  
 
 }
 
@@ -21,15 +23,25 @@ contract basicToken is ERC20Interface {
     string public name;
     uint8 public decimals;
     uint public _totalSupply;
-
+    // uint strikePrice;
+    // uint strikeDate;
+    // uint payOff;
+    // uint contractPrice;
+    // string assetTicker; 
     mapping(address => uint) balances; // show balance of a coin in a wallet 
     mapping(address => mapping(address => uint)) allowed; // wallet may allow for token to be spent in > 1 addresses
 
     constructor() {
-        symbol = "ABC";
-        name = "Basic Coin";
+        symbol = "ABO";
+        name = "Apple_BO";
         decimals = 18;
         _totalSupply = 1_000_001_000_000_000_000_000; // A million + 1 coins with 18 zeros of decimal points 
+        // strikePrice = 224;
+        // strikeDate = 10 days;
+        // payOff = 5 gwei;
+        // contractPrice = 1 gwei; 
+        // assetTicker = "AAPL"
+
         balances[0x0966307038aB5cb9DcDeca50993e1f7153615eDa] = _totalSupply; // balance of my wallet is total supply (i am the creator)
         emit Transfer(address(0), 0x0966307038aB5cb9DcDeca50993e1f7153615eDa, _totalSupply); // any transfer will originate from my wallet? 
     }
@@ -43,8 +55,8 @@ contract basicToken is ERC20Interface {
         return balances[account];
     }
 
-    function allowance(address owner, address spender) public view returns (uint remaining) {
-        return allowed[owner][spender];
+    function allowance(address owner, address buyer) public view returns (uint remaining) {
+        return allowed[owner][buyer];
     }
 
     function transfer(address recipient, uint amount) public returns (bool success) {
@@ -54,9 +66,9 @@ contract basicToken is ERC20Interface {
         return true;
     }
 
-    function approve(address spender, uint amount) public returns (bool success) {
-        allowed[msg.sender][spender] = amount;
-        emit Approval(msg.sender, spender, amount);
+    function approve(address buyer, uint amount) public returns (bool success) {
+        allowed[msg.sender][buyer] = amount;
+        emit Approval(msg.sender, buyer, amount);
         return true;
     }
 
