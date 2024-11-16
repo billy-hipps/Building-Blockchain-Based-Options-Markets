@@ -1,22 +1,12 @@
-// SPDX License-Identifier: UNLICENSED
-pragma solidity 0.8.26;
+// SPDX License-Identifier: MIT
+pragma solidity 0.8.28;
 
-// ERC Token Standard #20 Interface 
-interface ERC20Interface {
-    function totalSupply() external view returns (uint);
-    function balanceOf(address account) external view returns (uint balance);
-    function allowance(address owner, address sender) external view returns (uint remaining);
-    function transfer(address recipient, uint amount) external returns (bool success);
-    function approve(address spender, uint amount) external returns (bool success);
-    function transferFrom(address sender, address recipient, uint amount) external returns (bool success);
-
-    event Transfer(address indexed from, address indexed to, uint value);
-    event Approval(address indexed owner, address indexed spender, uint value);
-
-}
+// define important events 
+event Transfer(address indexed from, address indexed to, uint value);
+event Approval(address indexed owner, address indexed spender, uint value);
 
 // Token contract 
-contract basicToken is ERC20Interface {
+contract basicToken {
     string public symbol;
     string public name;
     uint8 public decimals;
@@ -30,8 +20,8 @@ contract basicToken is ERC20Interface {
         name = "Basic Coin";
         decimals = 18;
         _totalSupply = 1_000_001_000_000_000_000_000; // A million + 1 coins with 18 zeros of decimal points 
-        balances[0x0966307038aB5cb9DcDeca50993e1f7153615eDa] = _totalSupply; // balance of my wallet is total supply (i am the creator)
-        emit Transfer(address(0), 0x0966307038aB5cb9DcDeca50993e1f7153615eDa, _totalSupply); // any transfer will originate from my wallet? 
+        balances[0x914CD4762d67386785ff738708E1012E5d098db4] = _totalSupply; // balance of my wallet is total supply (i am the creator)
+        emit Transfer(address(0), 0x914CD4762d67386785ff738708E1012E5d098db4, _totalSupply); // any transfer will originate from my wallet? 
     }
 
     // Implementations of essential functions 
