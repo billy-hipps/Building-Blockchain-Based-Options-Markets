@@ -1,25 +1,12 @@
 // SPDX License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-// ERC Token Standard #20 Interface 
-interface ERC20Interface {
-    function totalSupply() external view returns (uint);
-    function balanceOf(address account) external view returns (uint balance);
-    function allowance(address owner, address sender) external view returns (uint remaining);
-    function transfer(address recipient, uint amount) external returns (bool success);
-    function approve(address buyer, uint amount) external returns (bool success);
-    function transferFrom(address sender, address recipient, uint amount) external returns (bool success);
-    //function collectPayout(address creator, uint payOff) external returns(bool success);
-    //function terminate(address owner, address recipient, uint payOff;) external returns (bool success);
-
-    event Transfer(address indexed from, address indexed to, uint value);
-    event Approval(address indexed owner, address indexed buyer, uint value);
-    //event Terminmation(address indexed owner, address indexed buyer, uint payOff;);  
-
-}
+event Transfer(address indexed from, address indexed to, uint value);
+event Approval(address indexed owner, address indexed buyer, uint value);
+//event Terminmation(address indexed owner, address indexed buyer, uint payOff;);  
 
 // Token contract 
-contract BinaryOption is ERC20Interface {
+contract BinaryOption {
     string public symbol;
     string public name;
     uint8 public decimals;
@@ -36,7 +23,7 @@ contract BinaryOption is ERC20Interface {
         symbol = "ABO";
         name = "AAPL_BO";
         decimals = 18;
-        _totalSupply = 1_000_001_000_000_000_000_000; // A million + 1 coins with 18 zeros of decimal points 
+        _totalSupply = 1_000_000_000_000_000; //1 contract with 18 zeros of decimal points 
         // strikePrice = 224;
         // strikeDate = 10 days;
         // payOff = 5 gwei;
@@ -60,7 +47,7 @@ contract BinaryOption is ERC20Interface {
         return allowed[owner][buyer];
     }
 
-    function transfer(address recipient, uint amount) public returns (bool success) {
+    function transfer(address recipient, uint amount) external returns (bool success) {
         balances[msg.sender] = balances[msg.sender] - amount;
         balances[recipient] = balances[recipient] + amount;
         emit Transfer(msg.sender, recipient, amount);
@@ -68,8 +55,6 @@ contract BinaryOption is ERC20Interface {
     }
 
     function approve(address buyer, uint amount) public returns (bool success) {
-        //1. check if buyer has sufficient funds to purchase contract 
-        //2. check if creator has sufficient funds to issue the payOff
         allowed[msg.sender][buyer] = amount;
         emit Approval(msg.sender, buyer, amount);
         return true;
@@ -83,10 +68,13 @@ contract BinaryOption is ERC20Interface {
         return true;
 
     }
+
+    //function validate(address creator, address buyer, uint price, uint payOff) public returns (bool success) 
+        // check the creator has sufficient funds to issue the payoff 
+        // check the buyer has sufficient funds to buy the contract 
     
     //function collectPayout(address creator, uint payOff) public returns(bool success) 
         //send the payoff amount from the creator of the contract to the contract 
-
 
     //function terminate(address owner, address recipient, uint payOff;) external returns (bool success)
         //if date is before stike date -> who is terminating? -> issue appropriate penalty
