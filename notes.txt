@@ -1,4 +1,0 @@
-1. work out how to parameterise the constructor 
-2. connect contract constructor to Dapp - allow deployment from Dapp 
-3. Implement Binary option specific functions 
-4. Add ability to execute important functions on Dapp 
