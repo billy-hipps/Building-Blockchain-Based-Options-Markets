@@ -13,7 +13,11 @@ def login():
     private_key = None
 
     # Choose login type
-    creator = input("Login as creator? (y/n): ").strip().lower() == 'y'
+    creator = input("Login as creator? (y/n): ").strip().lower()
+    if creator == 'y':
+        creator = True
+    else:
+        creator = False
 
     # Login with account address and private key
     valid = False

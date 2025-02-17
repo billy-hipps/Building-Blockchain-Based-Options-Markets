@@ -37,7 +37,7 @@ buyer_lose_short = {
 }
 
 creator_insufficient_eth = {
-    'payout': 15000,
+    'payout': 10000000000000000000000,
     'strike_price': 100,
     'strike_date': 120,
     'expiry_price': 120,
