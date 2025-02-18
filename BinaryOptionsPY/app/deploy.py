@@ -1,6 +1,6 @@
 from web3 import Web3
 
-def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
+def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     """
     Deploys the CreateBO contract, calls `deployBinaryOption`, 
     and prints the deployed BinaryOption contract address.
@@ -14,7 +14,7 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
     contract = w3.eth.contract(abi=abi, bytecode=bytecode)
 
     # Get deployer's nonce
-    nonce = w3.eth.get_transaction_count(deployer_account)
+    nonce = w3.eth.get_transaction_count(deployerAccount)
 
     # Build transaction for deploying CreateBO
     tx = contract.constructor(
@@ -25,7 +25,7 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
         parameters['position'],
         w3.to_wei(parameters['contract_price'], "ether")
     ).build_transaction({
-        "from": deployer_account,
+        "from": deployerAccount,
         "gas": 3000000,  
         "gasPrice": w3.to_wei("20", "gwei"),
         "nonce": nonce,
@@ -33,7 +33,7 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
     })
 
     # Sign and send the transaction
-    signed_tx = w3.eth.account.sign_transaction(tx, private_key=private_key)
+    signed_tx = w3.eth.account.sign_transaction(tx, private_key=privateKey)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 
     # Wait for transaction confirmation
@@ -42,7 +42,7 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
     # Get deployed CreateBO contract address
     create_bo_address = tx_receipt.contractAddress
     print(f"CreateBO Contract Deployed at: {create_bo_address}")
-    print(f"CreateBO balance: {w3.eth.get_balance(create_bo_address)}")
+    print(f"CreateBO balance: {w3.eth.get_balance(create_bo_address)}\n")
 
     # Load deployed contract instance
     deployed_contract = w3.eth.contract(address=create_bo_address, abi=abi)
@@ -52,18 +52,18 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
     print(f"Expected BinaryOption Address (before txn): {expected_binary_option_address}")
 
     # Get new nonce for transaction
-    nonce = w3.eth.get_transaction_count(deployer_account)
+    nonce = w3.eth.get_transaction_count(deployerAccount)
 
     # **Step 2: Send the transaction**
     tx_binary_option = deployed_contract.functions.deployBinaryOption().build_transaction({
-        "from": deployer_account,
+        "from": deployerAccount,
         "gas": 3000000,
         "gasPrice": w3.to_wei("20", "gwei"),
         "nonce": nonce
     })
 
     # Sign and send deployBinaryOption transaction
-    signed_tx_binary_option = w3.eth.account.sign_transaction(tx_binary_option, private_key=private_key)
+    signed_tx_binary_option = w3.eth.account.sign_transaction(tx_binary_option, private_key=privateKey)
     tx_hash_binary_option = w3.eth.send_raw_transaction(signed_tx_binary_option.raw_transaction)
 
     # Wait for confirmation
@@ -72,6 +72,6 @@ def deploy(parameters, abi, bytecode, deployer_account, private_key, w3):
     # **Step 3: Get actual deployed Binary Option address**
     binary_option_address = deployed_contract.functions.binaryOptionAddress().call()
     print(f"BinaryOption Contract Deployed at: {binary_option_address}")
-    print(f"BO balance: {w3.eth.get_balance(binary_option_address)}")
+    print(f"BO balance: {w3.eth.get_balance(binary_option_address)}\n")
 
     return create_bo_address, binary_option_address

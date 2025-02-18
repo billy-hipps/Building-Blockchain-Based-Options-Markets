@@ -10,7 +10,7 @@ def login():
     w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
     account = None
-    private_key = None
+    privateKey = None
 
     # Choose login type
     creator = input("Login as creator? (y/n): ").strip().lower()
@@ -22,13 +22,13 @@ def login():
     # Login with account address and private key
     valid = False
     while not valid:
-        account_address = input("Enter your account address: ").strip()
-        private_key = input("Enter your private key: ").strip()
+        accountAddress = input("Enter your account address: ").strip()
+        privateKey = input("Enter your private key: ").strip()
 
         # Check if the account address and private key are valid
         try:
-            account = Account.from_key(private_key)
-            if account.address.lower() != account_address.lower():
+            account = Account.from_key(privateKey)
+            if account.address.lower() != accountAddress.lower():
                 print("Invalid account address and private key pair")
                 continue
         except ValueError:
@@ -37,4 +37,4 @@ def login():
 
         valid = True
 
-    return creator, account_address, private_key
+    return creator, accountAddress, privateKey

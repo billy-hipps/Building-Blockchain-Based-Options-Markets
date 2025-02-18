@@ -5,8 +5,8 @@ from compile import compile
 
 def buy(price, buyerAddress, buyerPrivateKey, deployerAddress, w3):
     # Compile contracts 
-    compiled_data = compile()
-    createContract = compiled_data["CreateBO"]
+    compiledData = compile()
+    createContract = compiledData["CreateBO"]
 
     # Call the buyContract function from the contract
     contract = w3.eth.contract(address=deployerAddress, abi=createContract[0])

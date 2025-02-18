@@ -1,11 +1,11 @@
 from web3 import Web3
 from compile import compile
 
-
+# Get status of a BinaryOption contract
 
 def BO_status(address, w3):
-    compiled_data = compile()
-    BinaryOption = compiled_data["BinaryOption"]
+    compiledData = compile()
+    BinaryOption = compiledData["BinaryOption"]
 
     contract = w3.eth.contract(address=address, abi=BinaryOption[0])
 

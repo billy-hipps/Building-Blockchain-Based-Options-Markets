@@ -40,8 +40,6 @@ def compile():
     with open(compiled_path, "w") as file:
         json.dump(compiled_sol, file, indent=4)
 
-    print("✅ All Contracts Compiled Successfully!")
-
     # Extract ABI and Bytecode dynamically
     compiled_data = {}  # Dictionary to store contract name as key and [ABI, Bytecode] as values
 

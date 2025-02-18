@@ -9,8 +9,8 @@ from login import login
 w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 
 #==== LOGIN ====
-creator, account_address, private_key = login()
+creator, accountAddress, privateKey = login()
 
 #==== MAIN MENU ====
 while True:
-    home_page(creator, account_address, private_key, w3)
+    home_page(creator, accountAddress, privateKey, w3)

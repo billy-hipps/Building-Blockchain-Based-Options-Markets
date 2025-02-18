@@ -5,7 +5,7 @@ from buy import buy
 from login import login
 from BO_status import BO_status
 
-def home_page(creator, address, private_key, w3):
+def home_page(creator, address, privateKey, w3):
     print('\n')
     if creator == True:
         print("You are logged in as a contract creator!")
@@ -18,15 +18,15 @@ def home_page(creator, address, private_key, w3):
             elif action == '2':
                 print("View Portfolio")
                 # call portfolio function
-                contract_address = input("Enter the contract address you want to view: ")
+                contractAddress = input("Enter the contract address you want to view: ")
                 # call BO_status function
-                BO_status(contract_address, w3)
+                BO_status(contractAddress, w3)
                 break
 
             elif action == '3':
+                print("Create Contract")
                 parameters = select_situation()
-                deployer_address, contract_address = create_contract(parameters, address, private_key, w3)
-                print(f"Contract deployed at: {contract_address}")
+                deployerAdress, contractAddress = create_contract(parameters, address, privateKey, w3)
 
             elif action == '4':
                 print("Logging out...!")
@@ -54,7 +54,7 @@ def home_page(creator, address, private_key, w3):
 
                 contract_to_buy = input("Enter the contract address you want to buy: ")
                 # call buy function
-                buy(10, address, private_key, contract_to_buy, w3)
+                buy(10, address, privateKey, contract_to_buy, w3)
                 break
 
             elif action == '4':
