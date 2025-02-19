@@ -17,16 +17,13 @@ def home_page(creator, address, privateKey, w3):
 
             elif action == '2':
                 print("View Portfolio")
-                # call portfolio function
-                contractAddress = input("Enter the contract address you want to view: ")
-                # call BO_status function
-                BO_status(contractAddress, w3)
+
                 break
 
             elif action == '3':
                 print("Create Contract")
                 parameters = select_situation()
-                deployerAdress, contractAddress = create_contract(parameters, address, privateKey, w3)
+                deployerAdress = create_contract(parameters, address, privateKey, w3)
 
             elif action == '4':
                 print("Logging out...!")
@@ -51,7 +48,6 @@ def home_page(creator, address, privateKey, w3):
             elif action == '3':
                 print("Browse contracts")
                 # call contract browser function
-
                 contract_to_buy = input("Enter the contract address you want to buy: ")
                 # call buy function
                 buy(10, address, privateKey, contract_to_buy, w3)

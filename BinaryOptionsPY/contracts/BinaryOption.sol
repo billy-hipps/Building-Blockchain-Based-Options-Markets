@@ -6,22 +6,26 @@ contract BinaryOption {
     // ======== Variables ========
 
     // ======== State Variables ========
-    bool public isBought; // true = bought, false = not bought
-    uint256 public contractBalance;
-    address payable public contractCreator;
-    address payable public contractBuyer;
-    uint8 public decimals;
+    bool private isBought; // true = bought, false = not bought
+    bool private isExpired; // true = expired, false = not expired
+    address payable private contractCreator;
+    address payable private deployerAddress;
+    address payable private contractBuyer;
+    uint256 private contractBalance;
+
+    uint8 private decimals;
 
     // ======== Contract Variables ========
-    string public symbol;
-    string public name;
-    uint256 public _totalSupply;
-    uint256 public strikePrice;
-    uint256 public strikeDate;
-    uint256 public payout;
-    uint256 public expiryPrice;
-    bool public position; // true = long, false = short
-    uint256 public contractPrice;
+    string private symbol;
+    string private name;
+    uint256 private strikePrice;
+    uint256 private strikeDate;
+    uint256 private payout;
+    uint256 private expiryPrice;
+    bool private position; // true = long, false = short
+    uint256 private contractPrice;
+
+    uint256 private _totalSupply;
 
     // ======== Constructor ========
     constructor(
@@ -31,13 +35,16 @@ contract BinaryOption {
         uint256 _expiryPrice,
         bool _position, 
         uint256 _contractPrice, 
-        address payable _contractCreator
+        address payable _contractCreator,
+        address payable _deployerAddress
 
     ) payable {
         // Default state variables
+        deployerAddress = _deployerAddress;
         contractCreator = _contractCreator;
         contractBuyer = payable(address(0));
         isBought = false;
+        isExpired = false;
 
         // Hard coded (for now) 
         symbol = "BO";
@@ -72,8 +79,18 @@ contract BinaryOption {
         return address(this).balance;
     }
 
-    // Buy the contract
+    function getStatus() external view returns (bool, bool, address, uint256) {
+        return (isBought, isExpired, contractBuyer, address(this).balance);
+    }
+
     function buy(address payable _contractBuyer) external {
+        require (msg.sender == deployerAddress, "You do not have permission to call this function.");
+        require (!isBought, "Contract has already been bought.");
+        _buy(_contractBuyer);
+    }
+
+    // Buy the contract
+    function _buy(address payable _contractBuyer) private {
         contractBuyer = _contractBuyer;
         isBought = true;
     }

@@ -1,4 +1,5 @@
 from web3 import Web3
+from BO_status import BO_status
 
 def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     """
@@ -9,6 +10,9 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     """
 
     assert w3.is_connected(), "Web3 connection failed!"
+
+
+    # ======== DEPLOY THE CREATEBO CONTRACT ========
 
     # Create contract object
     contract = w3.eth.contract(abi=abi, bytecode=bytecode)
@@ -44,17 +48,15 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     print(f"CreateBO Contract Deployed at: {create_bo_address}")
     print(f"CreateBO balance: {w3.eth.get_balance(create_bo_address)}\n")
 
+
+    # ======== DEPLOY THE BINARYOPTION CONTRACT ========
+
     # Load deployed contract instance
     deployed_contract = w3.eth.contract(address=create_bo_address, abi=abi)
-
-    # **Step 1: Get Expected Return Value from `deployBinaryOption`**
-    expected_binary_option_address = deployed_contract.functions.deployBinaryOption().call()
-    print(f"Expected BinaryOption Address (before txn): {expected_binary_option_address}")
 
     # Get new nonce for transaction
     nonce = w3.eth.get_transaction_count(deployerAccount)
 
-    # **Step 2: Send the transaction**
     tx_binary_option = deployed_contract.functions.deployBinaryOption().build_transaction({
         "from": deployerAccount,
         "gas": 3000000,
@@ -69,9 +71,7 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     # Wait for confirmation
     receipt_binary_option = w3.eth.wait_for_transaction_receipt(tx_hash_binary_option)
 
-    # **Step 3: Get actual deployed Binary Option address**
-    binary_option_address = deployed_contract.functions.binaryOptionAddress().call()
-    print(f"BinaryOption Contract Deployed at: {binary_option_address}")
-    print(f"BO balance: {w3.eth.get_balance(binary_option_address)}\n")
+    BO_status(create_bo_address, abi, w3)
+    
 
-    return create_bo_address, binary_option_address
+    return create_bo_address

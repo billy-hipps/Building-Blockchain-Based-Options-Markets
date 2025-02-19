@@ -1,6 +1,7 @@
 #==== BUY A CONTRACT ====
 from web3 import Web3
 from compile import compile
+from BO_status import BO_status
 
 
 def buy(price, buyerAddress, buyerPrivateKey, deployerAddress, w3):
@@ -25,8 +26,4 @@ def buy(price, buyerAddress, buyerPrivateKey, deployerAddress, w3):
     tx_hash = w3.eth.send_raw_transaction(signed_tx_buy.raw_transaction)
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
-    buyer = contract.functions.getBuyer().call()
-    is_bought = contract.functions.get_isBought().call()
-
-    print(f"Buyer: {buyer}")
-    print(f"isBought: {is_bought}")
+    BO_status(deployerAddress, createContract[0], w3)

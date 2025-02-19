@@ -10,11 +10,9 @@ def create_contract(parameters, address, privateKey, w3):
     # Compile contracts 
     compiledData = compile()
 
-    createContract = compiledData["CreateBO"]
-    BinaryOption = compiledData["BinaryOption"]   
-    buyContract = compiledData["Buy"]
+    createContract = compiledData["CreateBO"]  
     
     # Deploy CreateBO with automatic ETH payment
-    create_bo_address, binary_option_address = deploy(parameters, createContract[0], createContract[1], address, privateKey, w3)
+    create_bo_address = deploy(parameters, createContract[0], createContract[1], address, privateKey, w3)
 
-    return create_bo_address, binary_option_address
+    return create_bo_address

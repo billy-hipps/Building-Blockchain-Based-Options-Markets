@@ -3,14 +3,15 @@ from compile import compile
 
 # Get status of a BinaryOption contract
 
-def BO_status(address, w3):
-    compiledData = compile()
-    BinaryOption = compiledData["BinaryOption"]
+def BO_status(address, abi, w3):
+    contract = w3.eth.contract(address=address, abi=abi)
 
-    contract = w3.eth.contract(address=address, abi=BinaryOption[0])
+    isBought, isExpired, contractBuyer, contractBalance = contract.functions.get_BO_status().call()
 
-    buyer = contract.functions.get_contractBuyer().call()
-    isBought = contract.functions.isBought().call()
+    print("Binary Option Status:")
+    print("Contract is bought: ", isBought)
+    print("Contract is expired: ", isExpired)
+    print("Contract buyer: ", contractBuyer)
+    print("Contract balance: ", contractBalance)
+    print("\n")
 
-    print(f"Buyer: {buyer}")
-    print(f"IsBought: {isBought}")

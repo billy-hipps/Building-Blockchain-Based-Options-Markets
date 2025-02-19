@@ -6,24 +6,27 @@ import "./BinaryOption.sol";
 // ======== Interface for BinaryOption ========
 interface IBinaryOption {
     function buy(address payable _contractBuyer) external;
+    function getStatus() external view returns (bool, bool, address, uint256);
+
 }
 
 contract CreateBO {
     // ======== State Variables ========
-    address payable public creator;
-    uint256 public balance;
-    bool public isDeployed;
-    bool public isBought;
+    address payable private creator;
+    uint256 private balance;
+    bool private isDeployed;
+    bool private isBought;
+    bool private isExpired;
 
     // ======== BO Variables ========
-    uint256 public strikePrice;
-    uint256 public strikeDate;
-    uint256 public payout;
-    uint256 public expiryPrice;
-    bool public position;
-    uint256 public contractPrice;
-    address payable public buyer;
-    address public binaryOptionAddress;
+    uint256 private strikePrice;
+    uint256 private strikeDate;
+    uint256 private payout;
+    uint256 private expiryPrice;
+    bool private position;
+    uint256 private contractPrice;
+    address payable private buyer;
+    address private binaryOptionAddress;
 
     // ======== Events ========
     event Deposited(address indexed sender, uint256 amount);
@@ -67,6 +70,7 @@ contract CreateBO {
         return isBought;
     }
 
+
     // ======== ETH Deposit ========
     receive() external payable {
         emit Deposited(msg.sender, msg.value);
@@ -75,22 +79,30 @@ contract CreateBO {
         balance = address(this).balance;
     }
 
+
+    function get_BO_status() public view returns (bool, bool, address, uint256) {
+        require(msg.sender == creator, "Only creator can check the status of the contract");
+        (bool _isBought, bool _isExpired, address _buyer, uint256 _balance) = IBinaryOption(binaryOptionAddress).getStatus();
+        return (_isBought, _isExpired, _buyer, _balance);
+    }
+
+
     // ======== Deploy Binary Option ========
-    function deployBinaryOption() public returns (address) {
-        //require(balance >= payout, "Insufficient balance for payout");
+    function deployBinaryOption() public {
+        require(msg.sender == creator, "Only creator can deploy the contract");
 
         binaryOptionAddress = _deployBinaryOption();
-
         require(binaryOptionAddress != address(0), "BinaryOption contract not deployed");
+        
         (bool success, ) = payable(binaryOptionAddress).call{value: address(this).balance}("");
         require(success, "Transfer to BinaryOption failed");
 
         emit Created(creator, address(this));
 
-        return binaryOptionAddress;
     }
 
-    function _deployBinaryOption() internal returns (address payable) {
+
+    function _deployBinaryOption() private returns (address payable) {
         BinaryOption bo = new BinaryOption(
             strikePrice,
             strikeDate,
@@ -98,13 +110,15 @@ contract CreateBO {
             expiryPrice,
             position,
             contractPrice,
-            creator
+            creator, 
+            payable(address(this))
         );
         return payable(address(bo));
     }
 
+
     // ======== Buy Binary Option Contract ========
-    function buyContract() external payable {
+    function buyContract() public payable {
         require(binaryOptionAddress != address(0), "BinaryOption not deployed");
         require(!isDeployed, "BinaryOption already bought!");
         require(msg.sender != creator, "Creator cannot buy the contract!");
