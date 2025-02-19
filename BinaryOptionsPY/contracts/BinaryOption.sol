@@ -60,14 +60,39 @@ contract BinaryOption {
         position = _position;
         contractPrice = _contractPrice;
 
+        // Start the countdown to expiry
+        
+
+
     }
 
-    function get_contractBuyer() public view returns (address) {
-        return contractBuyer;
-    }
 
     function get_isBought() public view returns (bool) {
         return isBought;
+    }
+
+    function get_strikeDate() public view returns (uint256) {
+        return strikeDate;
+    }
+
+    function get_strikePrice() public view returns (uint256) {
+        return strikePrice;
+    }
+
+    function get_payout() public view returns (uint256) {
+        return payout;
+    }
+
+    function get_expiryPrice() public view returns (uint256) {
+        return expiryPrice;
+    }
+
+    function get_owner() public view returns (address) {
+        return contractCreator;
+    }
+
+    function get_contractBuyer() public view returns (address payable) {
+        return contractBuyer;
     }
 
     // Function to receive ETH
@@ -93,6 +118,20 @@ contract BinaryOption {
     function _buy(address payable _contractBuyer) private {
         contractBuyer = _contractBuyer;
         isBought = true;
+    }
+
+    // Function to terminate the contract
+    function terminate() private {
+        isBought = get_isBought();
+        strikeDate = get_strikeDate();
+        strikePrice = get_strikePrice();
+        payout = get_payout();
+        expiryPrice = get_expiryPrice();
+        contractBuyer = get_contractBuyer();
+
+        contractBalance = address(this).balance;
+
+        
     }
 
 }
