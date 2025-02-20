@@ -1,5 +1,7 @@
 from web3 import Web3
 from BO_status import BO_status
+from schedule import fetch_time, schedule
+import asyncio
 
 def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     """
@@ -20,10 +22,12 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     # Get deployer's nonce
     nonce = w3.eth.get_transaction_count(deployerAccount)
 
+    strikeDate = fetch_time() + 2 * 60  # 2 minutes from now
+
     # Build transaction for deploying CreateBO
     tx = contract.constructor(
         parameters['strike_price'],
-        parameters['strike_date'],
+        strikeDate,
         parameters['payout'],
         parameters['expiry_price'],
         parameters['position'],
@@ -46,7 +50,7 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
     # Get deployed CreateBO contract address
     create_bo_address = tx_receipt.contractAddress
     print(f"CreateBO Contract Deployed at: {create_bo_address}")
-    print(f"CreateBO balance: {w3.eth.get_balance(create_bo_address)}\n")
+    print(f"CreateBO balance: {w3.eth.get_balance(create_bo_address) / 10**18}\n")
 
 
     # ======== DEPLOY THE BINARYOPTION CONTRACT ========
@@ -73,5 +77,10 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
 
     BO_status(create_bo_address, abi, w3)
     
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        asyncio.create_task(schedule(strikeDate, deployerAccount, privateKey, create_bo_address, abi, w3))
+    else:
+        asyncio.run(schedule(strikeDate, deployerAccount, privateKey, create_bo_address, abi, w3))
 
     return create_bo_address

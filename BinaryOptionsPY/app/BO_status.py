@@ -12,6 +12,6 @@ def BO_status(address, abi, w3):
     print("Contract is bought: ", isBought)
     print("Contract is expired: ", isExpired)
     print("Contract buyer: ", contractBuyer)
-    print("Contract balance: ", contractBalance)
+    print("Contract balance: ", contractBalance / 10**18)
     print("\n")
 

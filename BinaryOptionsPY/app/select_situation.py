@@ -3,7 +3,7 @@
 buyer_win_long = {
     'payout': 20,
     'strike_price': 100,
-    'strike_date': 120,
+    #'strike_date': 120,
     'expiry_price': 120,
     'contract_price': 10,
     'position' : True
@@ -12,7 +12,7 @@ buyer_win_long = {
 buyer_win_short = {
     'payout': 20,
     'strike_price': 100,
-    'strike_date': 120,
+    #'strike_date': 120,
     'expiry_price': 80,
     'contract_price': 10,
     'position' : False
@@ -21,7 +21,7 @@ buyer_win_short = {
 buyer_lose_long = {
     'payout': 20,
     'strike_price': 100,
-    'strike_date': 120,
+    #'strike_date': 120,
     'expiry_price': 80,
     'contract_price': 10,
     'position' : True
@@ -30,7 +30,7 @@ buyer_lose_long = {
 buyer_lose_short = {
     'payout': 20,
     'strike_price': 100,
-    'strike_date': 120,
+    #'strike_date': 120,
     'expiry_price': 120,
     'contract_price': 10,
     'position' : False
@@ -39,7 +39,7 @@ buyer_lose_short = {
 creator_insufficient_eth = {
     'payout': 10000000000000000000000,
     'strike_price': 100,
-    'strike_date': 120,
+    #'strike_date': 120,
     'expiry_price': 120,
     'contract_price': 10,
     'position' : True

@@ -2,21 +2,29 @@
 pragma solidity 0.8.28;
 
 import "./BinaryOption.sol";
+import "./TimeOracle.sol";
 
 // ======== Interface for BinaryOption ========
 interface IBinaryOption {
     function buy(address payable _contractBuyer) external;
     function getStatus() external view returns (bool, bool, address, uint256);
+    function terminate() external;
 
 }
 
+interface ITimeOracle {
+    function getTime(uint256 _newTime) external returns (uint256);
+}
+
 contract CreateBO {
+
     // ======== State Variables ========
     address payable private creator;
     uint256 private balance;
     bool private isDeployed;
     bool private isBought;
     bool private isExpired;
+    address private timeOracleAddress;
 
     // ======== BO Variables ========
     uint256 private strikePrice;
@@ -27,6 +35,10 @@ contract CreateBO {
     uint256 private contractPrice;
     address payable private buyer;
     address private binaryOptionAddress;
+    uint256 private currentTime;
+    uint256 private timeDelta;
+    uint256 private currentAssetPrice;
+    
 
     // ======== Events ========
     event Deposited(address indexed sender, uint256 amount);
@@ -41,6 +53,8 @@ contract CreateBO {
         uint256 _expiryPrice,
         bool _position,
         uint256 _contractPrice
+
+
     ) payable {
         creator = payable(msg.sender);
         strikePrice = _strikePrice;
@@ -51,6 +65,9 @@ contract CreateBO {
         contractPrice = _contractPrice;
         isDeployed = false;
         isBought = false;
+
+        timeOracleAddress = deployTimeOracle();
+        
     }
 
     // ======== View Functions ========
@@ -135,6 +152,22 @@ contract CreateBO {
         buyer = payable(msg.sender);
 
         emit Bought(msg.sender, address(this));
+    }
+
+    function deployTimeOracle() public returns (address) {
+        TimeOracle timeOracle = new TimeOracle(address(this));
+        return address(timeOracle);
+    }
+
+    function timeUpdate(uint256 _newTime) public {
+        currentTime = ITimeOracle(timeOracleAddress).getTime(_newTime);
+        timeDelta = strikeDate - currentTime;
+
+        if (timeDelta <= 0) {
+            IBinaryOption(binaryOptionAddress).terminate();
+        } else {
+            return;
+        }
     }
     
 }
