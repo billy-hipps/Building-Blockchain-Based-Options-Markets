@@ -1,0 +1,9 @@
+/compiled_contracts/
+/frontend/
+/node_modules/
+/hardhat.config.js
+/instructions.txt
+/package-lock.json
+/package.json
+/test.ipynb
+/venv_steps.txt
