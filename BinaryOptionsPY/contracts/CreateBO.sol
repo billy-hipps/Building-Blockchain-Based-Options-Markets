@@ -20,21 +20,22 @@ contract CreateBO {
 
     // ======== State Variables ========
     address payable private creator;
-    uint256 private balance;
-    bool private isDeployed;
-    bool private isBought;
-    bool private isExpired;
-    address private timeOracleAddress;
-
-    // ======== BO Variables ========
-    uint256 private strikePrice;
-    uint256 private strikeDate;
-    uint256 private payout;
-    uint256 private expiryPrice;
-    bool private position;
-    uint256 private contractPrice;
     address payable private buyer;
     address private binaryOptionAddress;
+    bool private isBought;
+    bool private isExpired;
+
+    address private timeOracleAddress;
+
+    // ======== BO Parameters ========
+    uint256 immutable private strikePrice;
+    uint256 immutable private strikeDate;
+    uint256 immutable private payout;
+    bool immutable private position;
+
+    uint256 private expiryPrice;
+    uint256 private contractPrice;
+
     uint256 private currentTime;
     uint256 private timeDelta;
     uint256 private currentAssetPrice;
@@ -50,24 +51,30 @@ contract CreateBO {
         uint256 _strikePrice,
         uint256 _strikeDate,
         uint256 _payout,
-        uint256 _expiryPrice,
         bool _position,
+
+        uint256 _expiryPrice,
         uint256 _contractPrice
 
-
     ) payable {
-        creator = payable(msg.sender);
         strikePrice = _strikePrice;
         strikeDate = _strikeDate;
-        payout = _payout;  // Ensure payout is in Wei
-        expiryPrice = _expiryPrice;
+        payout = _payout;
         position = _position;
-        contractPrice = _contractPrice;
-        isDeployed = false;
-        isBought = false;
 
+        expiryPrice = _expiryPrice;
+        contractPrice = _contractPrice;
+
+        creator = payable(msg.sender);
         timeOracleAddress = deployTimeOracle();
+        isBought = false;
+        isExpired = false;
         
+    }
+
+    modifier onlyCreator() {
+        require(msg.sender == creator, "Only creator can call this function");
+        _;
     }
 
     // ======== View Functions ========
@@ -91,69 +98,10 @@ contract CreateBO {
     // ======== ETH Deposit ========
     receive() external payable {
         emit Deposited(msg.sender, msg.value);
-
-        // Always get the actual balance of the contract
-        balance = address(this).balance;
     }
 
 
-    function get_BO_status() public view returns (bool, bool, address, uint256) {
-        require(msg.sender == creator, "Only creator can check the status of the contract");
-        (bool _isBought, bool _isExpired, address _buyer, uint256 _balance) = IBinaryOption(binaryOptionAddress).getStatus();
-        return (_isBought, _isExpired, _buyer, _balance);
-    }
-
-
-    // ======== Deploy Binary Option ========
-    function deployBinaryOption() public {
-        require(msg.sender == creator, "Only creator can deploy the contract");
-
-        binaryOptionAddress = _deployBinaryOption();
-        require(binaryOptionAddress != address(0), "BinaryOption contract not deployed");
-        
-        (bool success, ) = payable(binaryOptionAddress).call{value: address(this).balance}("");
-        require(success, "Transfer to BinaryOption failed");
-
-        emit Created(creator, address(this));
-
-    }
-
-
-    function _deployBinaryOption() private returns (address payable) {
-        BinaryOption bo = new BinaryOption(
-            strikePrice,
-            strikeDate,
-            payout,
-            expiryPrice,
-            position,
-            contractPrice,
-            creator, 
-            payable(address(this))
-        );
-        return payable(address(bo));
-    }
-
-
-    // ======== Buy Binary Option Contract ========
-    function buyContract() public payable {
-        require(binaryOptionAddress != address(0), "BinaryOption not deployed");
-        require(!isDeployed, "BinaryOption already bought!");
-        require(msg.sender != creator, "Creator cannot buy the contract!");
-        require(msg.value >= contractPrice, "Incorrect ETH amount sent!");
-
-        // Call `buy()` on the deployed BinaryOption contract
-        IBinaryOption(binaryOptionAddress).buy(payable(msg.sender));
-
-        // Transfer the received ETH to the creator
-        (bool success, ) = creator.call{value: msg.value}("");
-        require(success, "Transfer to creator failed");
-
-        isBought = true;
-        buyer = payable(msg.sender);
-
-        emit Bought(msg.sender, address(this));
-    }
-
+    // ======== Deploy Time Oracle ========
     function deployTimeOracle() public returns (address) {
         TimeOracle timeOracle = new TimeOracle(address(this));
         return address(timeOracle);
@@ -168,6 +116,58 @@ contract CreateBO {
         } else {
             return;
         }
+    }
+
+    function get_BO_status() public view onlyCreator returns (bool, bool, address, uint256) {
+        (bool _isBought, bool _isExpired, address _buyer, uint256 _balance) = IBinaryOption(binaryOptionAddress).getStatus();
+        return (_isBought, _isExpired, _buyer, _balance);
+    }
+
+
+    // ======== Deploy Binary Option ========
+    function deployBinaryOption() public onlyCreator {
+        binaryOptionAddress = _deployBinaryOption();
+        require(binaryOptionAddress != address(0), "BinaryOption contract not deployed");
+        
+        (bool success, ) = payable(binaryOptionAddress).call{value: address(this).balance}("");
+        require(success, "Transfer to BinaryOption failed");
+
+        emit Created(creator, address(this));
+
+    }
+
+    function _deployBinaryOption() private returns (address payable) {
+        BinaryOption bo = new BinaryOption(
+            strikePrice,
+            strikeDate,
+            payout,
+            position,
+            expiryPrice,
+            contractPrice,
+            creator, 
+            payable(address(this))
+        );
+        return payable(address(bo));
+    }
+
+
+    // ======== Buy Binary Option Contract ========
+    function buyContract() public payable {
+        require(binaryOptionAddress != address(0), "BinaryOption not deployed");
+        require(msg.sender != creator, "Creator cannot buy the contract!");
+        require(msg.value >= contractPrice, "Incorrect ETH amount sent!");
+
+        // Call `buy()` on the deployed BinaryOption contract
+        IBinaryOption(binaryOptionAddress).buy(payable(msg.sender));
+
+        // Transfer the received ETH to the creator
+        (bool success, ) = creator.call{value: msg.value}("");
+        require(success, "Transfer to creator failed");
+
+        isBought = true;
+        buyer = payable(msg.sender);
+
+        emit Bought(msg.sender, address(this));
     }
     
 }

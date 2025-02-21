@@ -3,8 +3,7 @@ pragma solidity ^0.8.0;
 
 contract TimeOracle {
     uint256 public currentTime;
-    address public deployer; // Off-chain oracle account
-
+    address public deployer;
     event TimeUpdated(uint256 newTime);
 
     constructor(address _updater) {

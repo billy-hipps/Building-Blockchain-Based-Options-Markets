@@ -29,8 +29,8 @@ def deploy(parameters, abi, bytecode, deployerAccount, privateKey, w3):
         parameters['strike_price'],
         strikeDate,
         parameters['payout'],
-        parameters['expiry_price'],
         parameters['position'],
+        parameters['expiry_price'],
         w3.to_wei(parameters['contract_price'], "ether")
     ).build_transaction({
         "from": deployerAccount,

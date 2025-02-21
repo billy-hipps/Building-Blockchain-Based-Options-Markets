@@ -3,46 +3,53 @@ pragma solidity 0.8.28;
 
 
 contract BinaryOption {
-    // ======== Variables ========
 
     // ======== State Variables ========
+    address payable private deployerAddress;
+    address payable private contractCreator;
+    address payable private contractBuyer;
     bool private isBought; // true = bought, false = not bought
     bool private isExpired; // true = expired, false = not expired
-    address payable private contractCreator;
-    address payable private deployerAddress;
-    address payable private contractBuyer;
-    uint256 private contractBalance;
 
-
-    uint8 private decimals;
-
-    // ======== Contract Variables ========
+    // ======== BO Parameters ========
     string private symbol;
     string private name;
+
     uint256 private strikePrice;
     uint256 private strikeDate;
     uint256 private payout;
-    uint256 private expiryPrice;
     bool private position; // true = long, false = short
-    uint256 private contractPrice;
 
-    uint256 private _totalSupply;
+    uint256 private expiryPrice;
+    uint256 private contractPrice;
 
     // ======== Constructor ========
     constructor(
         uint256 _strikePrice, 
         uint256 _strikeDate, 
         uint256 _payout, 
+        bool _position,
+
         uint256 _expiryPrice,
-        bool _position, 
-        uint256 _contractPrice, 
+        uint256 _contractPrice,
+
         address payable _contractCreator,
         address payable _deployerAddress
 
     ) payable {
-        // Default state variables
+        // BO Parameters
+        strikePrice = _strikePrice;
+        strikeDate = block.timestamp + _strikeDate;
+        payout = _payout;
+        position = _position;
+
+        expiryPrice = _expiryPrice;
+        contractPrice = _contractPrice;
+
         deployerAddress = _deployerAddress;
         contractCreator = _contractCreator;
+
+        // Default state vaiables
         contractBuyer = payable(address(0));
         isBought = false;
         isExpired = false;
@@ -50,17 +57,12 @@ contract BinaryOption {
         // Hard coded (for now) 
         symbol = "BO";
         name = "Binary Option";
-        decimals = 0;
-        _totalSupply = 1; // Only one contract can be created at a time
 
-        // Parameterised 
-        strikePrice = _strikePrice;
-        strikeDate = block.timestamp + _strikeDate; // Assuming `_strikeDate` is a duration in seconds
-        payout = _payout;
-        expiryPrice = _expiryPrice;
-        position = _position;
-        contractPrice = _contractPrice;
+    }
 
+    modifier onlyDeployer() {
+        require(msg.sender == deployerAddress, "Not authorized");
+        _;
     }
 
     // Function to receive ETH
@@ -76,8 +78,7 @@ contract BinaryOption {
         return (isBought, isExpired, contractBuyer, address(this).balance);
     }
 
-    function buy(address payable _contractBuyer) external {
-        require (msg.sender == deployerAddress, "You do not have permission to call this function.");
+    function buy(address payable _contractBuyer) external onlyDeployer {
         require (!isBought, "Contract has already been bought.");
         _buy(_contractBuyer);
     }
@@ -88,8 +89,7 @@ contract BinaryOption {
         isBought = true;
     }
 
-    function terminate() external {
-        require (msg.sender == deployerAddress, "You do not have permission to call this function.");
+    function terminate() external onlyDeployer {
         require (!isExpired, "Contract has already expired.");
         _terminate();
     }
@@ -117,9 +117,7 @@ contract BinaryOption {
                 }
             }
         } 
-
         isExpired = true;
     }
-
 
 }
