@@ -6,13 +6,15 @@ from compile import compile
 from deploy import deploy 
 #==== PARAMETERISE AND DEPLOY CONTRACT ====
 
-def create_contract(parameters, address, privateKey, w3):
+def create_contract(factoryAddress, parameters, creatorAddress, privateKey, w3):
     # Compile contracts 
     compiledData = compile()
 
-    createContract = compiledData["CreateBO"]  
+    factory = compiledData["Factory"]
+    createBO = compiledData["CreateBO"]
     
     # Deploy CreateBO with automatic ETH payment
-    create_bo_address = deploy(parameters, createContract[0], createContract[1], address, privateKey, w3)
+    create_bo_address = deploy(factoryAddress, parameters, factory[0], factory[1], createBO[0], creatorAddress, privateKey, w3)
 
     return create_bo_address
+    

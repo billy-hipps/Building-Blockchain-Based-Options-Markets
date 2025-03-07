@@ -11,6 +11,7 @@ def init():
     #==== LOGIN ====
     creator, accountAddress, privateKey = login()
 
+
     #==== MAIN MENU ====
     while True:
         home_page(creator, accountAddress, privateKey, w3)

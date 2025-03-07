@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity ^0.8.20;
 
 import "./BinaryOption.sol";
 import "./TimeOracle.sol";
@@ -12,13 +12,19 @@ interface IBinaryOption {
 
 }
 
+
+// ======== Interface for TimeOracle ========
 interface ITimeOracle {
     function getTime(uint256 _newTime) external returns (uint256);
 }
 
+
+// ======== CreateBO Contract ========
+
 contract CreateBO {
 
     // ======== State Variables ========
+    address factory;
     address payable private creator;
     address payable private buyer;
     address private binaryOptionAddress;
@@ -48,15 +54,20 @@ contract CreateBO {
 
     // ======== Constructor ========
     constructor(
+        address _factory,
         uint256 _strikePrice,
         uint256 _strikeDate,
         uint256 _payout,
         bool _position,
 
         uint256 _expiryPrice,
-        uint256 _contractPrice
+        uint256 _contractPrice,
+
+        address payable _creator
 
     ) payable {
+        factory = _factory;
+
         strikePrice = _strikePrice;
         strikeDate = _strikeDate;
         payout = _payout;
@@ -65,7 +76,7 @@ contract CreateBO {
         expiryPrice = _expiryPrice;
         contractPrice = _contractPrice;
 
-        creator = payable(msg.sender);
+        creator = _creator;
         timeOracleAddress = deployTimeOracle();
         isBought = false;
         isExpired = false;
@@ -73,7 +84,12 @@ contract CreateBO {
     }
 
     modifier onlyCreator() {
-        require(msg.sender == creator, "Only creator can call this function");
+        require(msg.sender == creator, "CreateBO: Only creator can call this function");
+        _;
+    }
+
+    modifier onlyFactory() {
+        require(msg.sender == factory, "CreateBO: Only factory can call this function");
         _;
     }
 
@@ -125,12 +141,12 @@ contract CreateBO {
 
 
     // ======== Deploy Binary Option ========
-    function deployBinaryOption() public onlyCreator {
+    function deployBinaryOption() public onlyFactory {
         binaryOptionAddress = _deployBinaryOption();
-        require(binaryOptionAddress != address(0), "BinaryOption contract not deployed");
+        require(binaryOptionAddress != address(0), "CreateBO: BinaryOption contract not deployed");
         
         (bool success, ) = payable(binaryOptionAddress).call{value: address(this).balance}("");
-        require(success, "Transfer to BinaryOption failed");
+        require(success, "CreateBO: Transfer to BinaryOption failed");
 
         emit Created(creator, address(this));
 
@@ -153,16 +169,16 @@ contract CreateBO {
 
     // ======== Buy Binary Option Contract ========
     function buyContract() public payable {
-        require(binaryOptionAddress != address(0), "BinaryOption not deployed");
-        require(msg.sender != creator, "Creator cannot buy the contract!");
-        require(msg.value >= contractPrice, "Incorrect ETH amount sent!");
+        require(binaryOptionAddress != address(0), "CreateBO: BinaryOption not deployed");
+        require(msg.sender != creator, "CreateBO: Creator cannot buy the contract!");
+        require(msg.value >= contractPrice, "CreateBO: Incorrect ETH amount sent!");
 
         // Call `buy()` on the deployed BinaryOption contract
         IBinaryOption(binaryOptionAddress).buy(payable(msg.sender));
 
         // Transfer the received ETH to the creator
         (bool success, ) = creator.call{value: msg.value}("");
-        require(success, "Transfer to creator failed");
+        require(success, "CreateBO: Transfer to creator failed");
 
         isBought = true;
         buyer = payable(msg.sender);

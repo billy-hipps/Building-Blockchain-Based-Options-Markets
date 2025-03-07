@@ -8,6 +8,7 @@ def BO_status(address, abi, w3):
 
     isBought, isExpired, contractBuyer, contractBalance = contract.functions.get_BO_status().call()
 
+    print("\n")
     print("Binary Option Status:")
     print("Contract is bought: ", isBought)
     print("Contract is expired: ", isExpired)

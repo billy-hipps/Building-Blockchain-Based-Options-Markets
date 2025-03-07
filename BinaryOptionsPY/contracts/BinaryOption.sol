@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.28;
+pragma solidity ^0.8.20;
 
 
 contract BinaryOption {
@@ -61,7 +61,7 @@ contract BinaryOption {
     }
 
     modifier onlyDeployer() {
-        require(msg.sender == deployerAddress, "Not authorized");
+        require(msg.sender == deployerAddress, "BO: Not authorized");
         _;
     }
 
@@ -79,7 +79,7 @@ contract BinaryOption {
     }
 
     function buy(address payable _contractBuyer) external onlyDeployer {
-        require (!isBought, "Contract has already been bought.");
+        require (!isBought, "BO: Contract has already been bought.");
         _buy(_contractBuyer);
     }
 
@@ -90,7 +90,7 @@ contract BinaryOption {
     }
 
     function terminate() external onlyDeployer {
-        require (!isExpired, "Contract has already expired.");
+        require (!isExpired, "BO: Contract has already expired.");
         _terminate();
     }
 
