@@ -4,11 +4,13 @@ from time import sleep
 import requests
 import asyncio
 
+from stock_data import get_price
+
 def fetch_time():
     return int(time.time())
 
 # Function to schedule time updates
-async def schedule(strikeDate, deployerAddress, privateKey, contractAddress, abi, w3):
+async def schedule(ticker, strikeDate, deployerAddress, privateKey, contractAddress, abi, w3):
     # every timestep call the timeUpdate function in the CreateBO contract
     timeIntervals = []
 
@@ -25,10 +27,11 @@ async def schedule(strikeDate, deployerAddress, privateKey, contractAddress, abi
 
     for timestamp in timeIntervals:
         await asyncio.sleep(timestamp - fetch_time())
+        newPrice = get_price(ticker)
         contract = w3.eth.contract(address=contractAddress, abi=abi)
         nonce = w3.eth.get_transaction_count(deployerAddress)
 
-        tx = contract.functions.timeUpdate(int(timestamp)).build_transaction({
+        tx = contract.functions.timeUpdate(int(timestamp), newPrice).build_transaction({
             "from": deployerAddress,
             "gas": 3000000,
             "gasPrice": w3.to_wei("20", "gwei"),

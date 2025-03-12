@@ -1,23 +1,24 @@
-import requests 
-import pandas as pd
+import yfinance as yf
 
-def get_stock_data(symbol):
-    API_key = "ZY03UDMEHO5SPNLL"
-    BASE_URL = "https://www.alphavantage.co/query"
+def get_price(ticker):
+    try:
+        if not ticker or not isinstance(ticker, str):
+            raise ValueError("Invalid ticker symbol provided")
 
-    params = {
-        'function': 'TIME_SERIES_INTRADAY',
-        'symbol': symbol,
-        'interval': '1min',
-        'apikey': API_key
-    }
+        ticker = ticker.strip().upper()  # Remove spaces & enforce uppercase
 
-    response = requests.get(BASE_URL, params=params)
-    data = response.json()
-    timeSeries = data.get(f"Time Series (1min)", {})
-    df = pd.DataFrame.from_dict(timeSeries, orient='index')
-    df = df.rename(columns=lambda x: x.split(' ')[1])
-    return df
+        stock = yf.Ticker(ticker)
+        stock_info = stock.info
 
-df = get_stock_data("AAPL")
-print(df.head())
+        if not stock_info or "regularMarketPrice" not in stock_info:
+            raise ValueError(f"No market data found for ticker: {ticker}")
+
+        market_price = stock_info.get("regularMarketPrice", None)
+        if market_price is None:
+            return f"⚠ No live price found for {ticker}."
+
+        return int(market_price)
+
+    except Exception as e:
+        print(f"⚠ Error fetching price for {ticker}: {e}")
+        return None

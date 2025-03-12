@@ -12,6 +12,7 @@ contract BinaryOption {
     bool private isExpired; // true = expired, false = not expired
 
     // ======== BO Parameters ========
+    bytes32 private ticker;
     string private symbol;
     string private name;
 
@@ -25,12 +26,12 @@ contract BinaryOption {
 
     // ======== Constructor ========
     constructor(
+        bytes32 _ticker,
         uint256 _strikePrice, 
         uint256 _strikeDate, 
         uint256 _payout, 
         bool _position,
 
-        uint256 _expiryPrice,
         uint256 _contractPrice,
 
         address payable _contractCreator,
@@ -43,7 +44,6 @@ contract BinaryOption {
         payout = _payout;
         position = _position;
 
-        expiryPrice = _expiryPrice;
         contractPrice = _contractPrice;
 
         deployerAddress = _deployerAddress;
@@ -55,6 +55,7 @@ contract BinaryOption {
         isExpired = false;
 
         // Hard coded (for now) 
+        ticker = _ticker;
         symbol = "BO";
         name = "Binary Option";
 
@@ -89,8 +90,10 @@ contract BinaryOption {
         isBought = true;
     }
 
-    function terminate() external onlyDeployer {
+    function terminate(uint256 _newPrice) external onlyDeployer {
         require (!isExpired, "BO: Contract has already expired.");
+        // set the expiry price 
+        expiryPrice = _newPrice;
         _terminate();
     }
 

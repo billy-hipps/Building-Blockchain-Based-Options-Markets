@@ -13,11 +13,11 @@ contract Factory {
     address payable public creator;
 
 
-    function CreateAndDeploy(uint256 _strikePrice, 
+    function CreateAndDeploy(bytes32 _ticker,
+                            uint256 _strikePrice, 
                             uint256 _strikeDate, 
                             uint256 _payout, 
                             bool _position ,
-                            uint256 _expiryPrice,
                             uint256 _contractPrice) public payable {
 
         creator = payable(msg.sender);
@@ -27,11 +27,11 @@ contract Factory {
 
         // Payout ammount is sufficient, create CreateBO contract
         CreateBO createBO = new CreateBO(address(this),
+                            _ticker,
                             _strikePrice, 
                             _strikeDate, 
                             _payout, 
                             _position ,
-                            _expiryPrice,
                             _contractPrice, 
                             creator);
 
@@ -46,6 +46,10 @@ contract Factory {
         // Deploy the Binary Option contract
         ICreateBO(createBOAddress).deployBinaryOption();
 
+    }
+
+    function detDeployedContracts() public view returns (address[] memory) {
+        return createBOarray;
     }
 
 

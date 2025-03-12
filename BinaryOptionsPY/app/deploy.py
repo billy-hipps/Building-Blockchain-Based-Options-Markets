@@ -1,8 +1,8 @@
 from web3 import Web3
 from BO_status import BO_status
 from schedule import fetch_time, schedule
+from eth_utils import to_bytes, to_hex
 import asyncio
-
 
 
 def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_abi, creatorAddress, privateKey, w3):
@@ -11,27 +11,27 @@ def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_a
 
     nonce = w3.eth.get_transaction_count(creatorAddress)
 
-    strikeDate = fetch_time() + 2 * 60  # 2 minutes from now
+    strikeDate = fetch_time() + parameters['strike_date']
 
     payout_in_wei = w3.to_wei(parameters['payout'], "ether")
 
     # Estimate gas to avoid out-of-gas errors
     gas_estimate = factory.functions.CreateAndDeploy(
+        to_hex(to_bytes(text=parameters['ticker'].ljust(32))),
         parameters['strike_price'],
         strikeDate,
         payout_in_wei,
         parameters['position'],
-        parameters['expiry_price'],
         w3.to_wei(parameters['contract_price'], "ether")
     ).estimate_gas({"from": creatorAddress, "value": payout_in_wei})
 
     # Build transaction
     tx = factory.functions.CreateAndDeploy(
+        to_hex(to_bytes(text=parameters['ticker'].ljust(32))),
         parameters['strike_price'],
         strikeDate,
         payout_in_wei,
         parameters['position'],
-        parameters['expiry_price'],
         w3.to_wei(parameters['contract_price'], "ether")
     ).build_transaction({
         "from": creatorAddress,
@@ -62,6 +62,6 @@ def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_a
     if loop.is_running():
         asyncio.create_task(schedule(strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
     else:
-        asyncio.run(schedule(strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
+        asyncio.run(schedule(parameters['ticker'], strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
 
     return create_bo_address

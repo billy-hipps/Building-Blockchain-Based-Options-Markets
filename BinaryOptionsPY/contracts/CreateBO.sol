@@ -8,14 +8,14 @@ import "./TimeOracle.sol";
 interface IBinaryOption {
     function buy(address payable _contractBuyer) external;
     function getStatus() external view returns (bool, bool, address, uint256);
-    function terminate() external;
+    function terminate(uint256 _newPrice) external;
 
 }
 
 
 // ======== Interface for TimeOracle ========
 interface ITimeOracle {
-    function getTime(uint256 _newTime) external returns (uint256);
+    function oracleUpdate(uint256 _newTime, uint256 _newPrice) external returns (uint256, uint256);
 }
 
 
@@ -34,12 +34,12 @@ contract CreateBO {
     address private timeOracleAddress;
 
     // ======== BO Parameters ========
+    bytes32 immutable private ticker;
     uint256 immutable private strikePrice;
     uint256 immutable private strikeDate;
     uint256 immutable private payout;
     bool immutable private position;
 
-    uint256 private expiryPrice;
     uint256 private contractPrice;
 
     uint256 private currentTime;
@@ -55,12 +55,12 @@ contract CreateBO {
     // ======== Constructor ========
     constructor(
         address _factory,
+        bytes32 _ticker,
         uint256 _strikePrice,
         uint256 _strikeDate,
         uint256 _payout,
         bool _position,
 
-        uint256 _expiryPrice,
         uint256 _contractPrice,
 
         address payable _creator
@@ -68,12 +68,12 @@ contract CreateBO {
     ) payable {
         factory = _factory;
 
+        ticker = _ticker;
         strikePrice = _strikePrice;
         strikeDate = _strikeDate;
         payout = _payout;
         position = _position;
 
-        expiryPrice = _expiryPrice;
         contractPrice = _contractPrice;
 
         creator = _creator;
@@ -123,12 +123,12 @@ contract CreateBO {
         return address(timeOracle);
     }
 
-    function timeUpdate(uint256 _newTime) public {
-        currentTime = ITimeOracle(timeOracleAddress).getTime(_newTime);
+    function timeUpdate(uint256 _newTime, uint256 _newPrice) public {
+        (currentTime, currentAssetPrice) = ITimeOracle(timeOracleAddress).oracleUpdate(_newTime, _newPrice);
         timeDelta = strikeDate - currentTime;
 
         if (timeDelta <= 0) {
-            IBinaryOption(binaryOptionAddress).terminate();
+            IBinaryOption(binaryOptionAddress).terminate(_newPrice);
         } else {
             return;
         }
@@ -154,11 +154,11 @@ contract CreateBO {
 
     function _deployBinaryOption() private returns (address payable) {
         BinaryOption bo = new BinaryOption(
+            ticker,
             strikePrice,
             strikeDate,
             payout,
             position,
-            expiryPrice,
             contractPrice,
             creator, 
             payable(address(this))
