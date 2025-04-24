@@ -1,51 +1,44 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.23;
 
 import "./BinaryOption.sol";
 import "./TimeOracle.sol";
 
-// ======== Interface for BinaryOption ========
+// ======== Interfaces ========
 interface IBinaryOption {
     function buy(address payable _contractBuyer) external;
     function getStatus() external view returns (bool, bool, address, uint256);
     function terminate(uint256 _newPrice) external;
-
 }
 
-
-// ======== Interface for TimeOracle ========
 interface ITimeOracle {
     function oracleUpdate(uint256 _newTime, uint256 _newPrice) external returns (uint256, uint256);
 }
 
-
 // ======== CreateBO Contract ========
-
 contract CreateBO {
 
     // ======== State Variables ========
-    address factory;
-    address payable private creator;
-    address payable private buyer;
-    address private binaryOptionAddress;
-    bool private isBought;
-    bool private isExpired;
+    address public immutable factory;
+    address payable public immutable creator;
+    address payable public buyer;
+    address public binaryOptionAddress;
+    address public immutable timeOracleAddress;
 
-    address private timeOracleAddress;
+    bool public isBought;
+    bool public isExpired;
 
     // ======== BO Parameters ========
-    bytes32 immutable private ticker;
-    uint256 immutable private strikePrice;
-    uint256 immutable private strikeDate;
-    uint256 immutable private payout;
-    bool immutable private position;
-
-    uint256 private contractPrice;
+    bytes32 public immutable ticker;
+    uint256 public immutable strikePrice;
+    uint256 public immutable strikeDate;
+    uint256 public immutable payout;
+    bool public immutable position;
+    uint256 public immutable contractPrice;
 
     uint256 private currentTime;
     uint256 private timeDelta;
     uint256 private currentAssetPrice;
-    
 
     // ======== Events ========
     event Deposited(address indexed sender, uint256 amount);
@@ -60,27 +53,25 @@ contract CreateBO {
         uint256 _strikeDate,
         uint256 _payout,
         bool _position,
-
         uint256 _contractPrice,
-
         address payable _creator
-
     ) payable {
+        require(_factory != address(0), "CreateBO: Factory address cannot be zero");
+        require(_creator != address(0), "CreateBO: Creator address cannot be zero");
+
         factory = _factory;
+        creator = _creator;
 
         ticker = _ticker;
         strikePrice = _strikePrice;
         strikeDate = _strikeDate;
         payout = _payout;
         position = _position;
-
         contractPrice = _contractPrice;
 
-        creator = _creator;
         timeOracleAddress = deployTimeOracle();
         isBought = false;
         isExpired = false;
-        
     }
 
     modifier onlyCreator() {
@@ -90,6 +81,11 @@ contract CreateBO {
 
     modifier onlyFactory() {
         require(msg.sender == factory, "CreateBO: Only factory can call this function");
+        _;
+    }
+
+    modifier onlyThis() {
+        require(msg.sender == address(this), "CreateBO: Only this contract can call this function");
         _;
     }
 
@@ -110,46 +106,39 @@ contract CreateBO {
         return isBought;
     }
 
-
     // ======== ETH Deposit ========
     receive() external payable {
         emit Deposited(msg.sender, msg.value);
     }
 
-
-    // ======== Deploy Time Oracle ========
+    // ======== Time Oracle ========
     function deployTimeOracle() public returns (address) {
         TimeOracle timeOracle = new TimeOracle(address(this));
         return address(timeOracle);
     }
 
-    function timeUpdate(uint256 _newTime, uint256 _newPrice) public {
+    function timeUpdate(uint256 _newTime, uint256 _newPrice) public onlyCreator {
         (currentTime, currentAssetPrice) = ITimeOracle(timeOracleAddress).oracleUpdate(_newTime, _newPrice);
         timeDelta = strikeDate - currentTime;
 
         if (timeDelta <= 0) {
             IBinaryOption(binaryOptionAddress).terminate(_newPrice);
-        } else {
-            return;
         }
     }
 
     function get_BO_status() public view onlyCreator returns (bool, bool, address, uint256) {
-        (bool _isBought, bool _isExpired, address _buyer, uint256 _balance) = IBinaryOption(binaryOptionAddress).getStatus();
-        return (_isBought, _isExpired, _buyer, _balance);
+        return IBinaryOption(binaryOptionAddress).getStatus();
     }
-
 
     // ======== Deploy Binary Option ========
     function deployBinaryOption() public onlyFactory {
-        binaryOptionAddress = _deployBinaryOption();
+        binaryOptionAddress = address(_deployBinaryOption());
         require(binaryOptionAddress != address(0), "CreateBO: BinaryOption contract not deployed");
-        
+
         (bool success, ) = payable(binaryOptionAddress).call{value: address(this).balance}("");
         require(success, "CreateBO: Transfer to BinaryOption failed");
 
         emit Created(creator, address(this));
-
     }
 
     function _deployBinaryOption() private returns (address payable) {
@@ -166,24 +155,23 @@ contract CreateBO {
         return payable(address(bo));
     }
 
-
     // ======== Buy Binary Option Contract ========
     function buyContract() public payable {
         require(binaryOptionAddress != address(0), "CreateBO: BinaryOption not deployed");
         require(msg.sender != creator, "CreateBO: Creator cannot buy the contract!");
         require(msg.value >= contractPrice, "CreateBO: Incorrect ETH amount sent!");
+        require(!isBought, "CreateBO: Contract already bought!");
+        require(!isExpired, "CreateBO: Contract already expired!");
 
-        // Call `buy()` on the deployed BinaryOption contract
+        isBought = true;
         IBinaryOption(binaryOptionAddress).buy(payable(msg.sender));
+        
+        buyer = payable(msg.sender);
 
-        // Transfer the received ETH to the creator
         (bool success, ) = creator.call{value: msg.value}("");
         require(success, "CreateBO: Transfer to creator failed");
 
-        isBought = true;
-        buyer = payable(msg.sender);
-
         emit Bought(msg.sender, address(this));
     }
-    
 }
+

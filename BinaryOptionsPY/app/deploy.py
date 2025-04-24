@@ -1,5 +1,6 @@
 from web3 import Web3
 from BO_status import BO_status
+from stock_data import get_price
 from schedule import fetch_time, schedule
 from eth_utils import to_bytes, to_hex
 import asyncio
@@ -12,6 +13,8 @@ def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_a
     nonce = w3.eth.get_transaction_count(creatorAddress)
 
     strikeDate = fetch_time() + parameters['strike_date']
+
+    parameters['strike_price'] = get_price(parameters['ticker'])
 
     payout_in_wei = w3.to_wei(parameters['payout'], "ether")
 
@@ -47,7 +50,6 @@ def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_a
 
     tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
-    # FIX: Get contract address from logs instead of `contractAddress`
     if len(tx_receipt.logs) > 0:
         create_bo_address = tx_receipt.logs[0]["address"]
         print(f"CreateBO Contract Deployed at: {create_bo_address}")
@@ -58,10 +60,12 @@ def deploy(factoryAddress, parameters, factory_abi, factory_bytecode, createBO_a
     BO_status(create_bo_address, createBO_abi, w3)
 
     # Ensure event loop works correctly
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        asyncio.create_task(schedule(strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
-    else:
+    try:
+        loop = asyncio.get_running_loop()
+        if loop.is_running():
+            asyncio.create_task(schedule(strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
+    except RuntimeError:
         asyncio.run(schedule(parameters['ticker'], strikeDate, creatorAddress, privateKey, create_bo_address, createBO_abi, w3))
+
 
     return create_bo_address

@@ -1,19 +1,4 @@
-1. Complete factory implementation for improvements to UI
-    Along with app initialisation, the factory is deployed 
-    Creators interact with the factory to create new contracts 
-    The App queries the factory to facilitate buying and selling contracts 
-
-2. Implement fully customisable contract parameters
-    Move away from predefined assets, time frames etc 
-    Let creator specify all parameters
-
-3. Add price fetching to the Oracle
-    Use OpenBB to fetch live asset prices 
-    Implement a pricing model for use in the secondary market 
-
-4. Implement the choice of American style completion 
-    Implement a protocol that gives fair payment for early termination if either party chooses to terminate early 
-
-5. Implement a secondary Market 
-    Allow creators to sell their ownership i.e. sell their obligation to pay the payout 
-    Allow buyers to sell their buyership i.e. sell their right to a payout 
+1. Implement working Portfolio history window 
+2. Add a variable that stores how a contract settled 
+2. Clean up variable names so they match the report 
+3. Decide on how to carry out the Viva 

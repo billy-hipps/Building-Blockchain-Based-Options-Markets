@@ -10,9 +10,12 @@ def BO_status(address, abi, w3):
 
     print("\n")
     print("Binary Option Status:")
-    print("Contract is bought: ", isBought)
-    print("Contract is expired: ", isExpired)
-    print("Contract buyer: ", contractBuyer)
-    print("Contract balance: ", contractBalance / 10**18)
+    #print("Contract is bought: ", isBought)
+    #print("Contract is expired: ", isExpired)
+    #print("Contract buyer: ", contractBuyer)
+    #print("Contract balance: ", contractBalance / 10**18)
+
+    print("BO address", contract.functions.binaryOptionAddress().call())
+    print("Time Oracle address: ", contract.functions.timeOracleAddress().call())
     print("\n")
 

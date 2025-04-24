@@ -1,2 +1,0 @@
-# Activate your new virtual environment:
-$ source ~/.venv-py3/bin/activate

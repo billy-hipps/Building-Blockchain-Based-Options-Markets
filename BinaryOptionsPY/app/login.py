@@ -1,6 +1,8 @@
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 from eth_account import Account 
+from compile import compile 
+from create_factory import create_factory
 
 def login():
     # Connect to local Hardhat blockchain
@@ -36,5 +38,19 @@ def login():
             continue
 
         valid = True
+        compile()
 
-    return creator, accountAddress, privateKey
+        factory_address = None
+
+        while True:
+            action = input("Do you want to create a factory contract? (y/n): ")
+            if action == 'y':
+                print("Creating factory contract...")
+                factory_address = create_factory(accountAddress, privateKey, w3)
+                break
+            elif action == 'n':
+                factory_address = input("Enter the factory address: ")
+                factory_address = w3.to_checksum_address(factory_address)
+                break
+
+    return creator, accountAddress, privateKey, factory_address

@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.23;
 
 contract TimeOracle {
     uint256 public currentTime;
     uint256 public currentAssetPrice;
-    address public deployer;
+    address public immutable deployer;
+
     event TimeUpdated(uint256 newTime);
 
     constructor(address _updater) {
+        require(_updater != address(0), "Invalid updater address");
         deployer = _updater;
     }
 
@@ -25,9 +27,8 @@ contract TimeOracle {
     }
 
     // Get the latest oracle time
-    function oracleUpdate(uint256 _newTime, uint _currentPrice) public returns (uint256, uint256) {
+    function oracleUpdate(uint256 _newTime, uint256 _currentPrice) public returns (uint256, uint256) {
         update(_newTime, _currentPrice);
         return (currentTime, currentAssetPrice);
     }
 }
-

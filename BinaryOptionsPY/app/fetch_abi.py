@@ -31,4 +31,3 @@ def fetch_abi(contractName):
                     print(f"⚠ ABI not found for {contract_name}")
 
     return contract_abis[contractName]  # Dictionary with contract names as keys and ABIs as values
-

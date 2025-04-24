@@ -1,28 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
-
+pragma solidity ^0.8.23;
 
 contract BinaryOption {
 
     // ======== State Variables ========
-    address payable private deployerAddress;
-    address payable private contractCreator;
+    address payable public immutable deployerAddress;
+    address payable public immutable contractCreator;
     address payable private contractBuyer;
     bool private isBought; // true = bought, false = not bought
     bool private isExpired; // true = expired, false = not expired
 
     // ======== BO Parameters ========
-    bytes32 private ticker;
-    string private symbol;
-    string private name;
+    bytes32 public immutable ticker;
+    string public constant symbol = "BO";
+    string public constant name = "Binary Option";
 
-    uint256 private strikePrice;
-    uint256 private strikeDate;
-    uint256 private payout;
-    bool private position; // true = long, false = short
+    uint256 public immutable strikePrice;
+    uint256 public immutable strikeDate;
+    uint256 public immutable payout;
+    bool public immutable position; // true = long, false = short
 
     uint256 private expiryPrice;
-    uint256 private contractPrice;
+    uint256 public immutable contractPrice;
+
+    // ======== Events ========
+    event Bought(address indexed buyer);
+    event Terminated(uint256 expiryPrice, address recipient);
+    event PriceUpdate(uint256 newPrice);
 
     // ======== Constructor ========
     constructor(
@@ -31,34 +35,25 @@ contract BinaryOption {
         uint256 _strikeDate, 
         uint256 _payout, 
         bool _position,
-
         uint256 _contractPrice,
-
         address payable _contractCreator,
         address payable _deployerAddress
-
     ) payable {
-        // BO Parameters
+        require(_contractCreator != address(0), "BO: Invalid contract creator address");
+        require(_deployerAddress != address(0), "BO: Invalid deployer address");
+
         strikePrice = _strikePrice;
         strikeDate = block.timestamp + _strikeDate;
         payout = _payout;
         position = _position;
-
         contractPrice = _contractPrice;
-
         deployerAddress = _deployerAddress;
         contractCreator = _contractCreator;
 
-        // Default state vaiables
         contractBuyer = payable(address(0));
         isBought = false;
         isExpired = false;
-
-        // Hard coded (for now) 
         ticker = _ticker;
-        symbol = "BO";
-        name = "Binary Option";
-
     }
 
     modifier onlyDeployer() {
@@ -66,16 +61,20 @@ contract BinaryOption {
         _;
     }
 
-    // Function to receive ETH
-    receive() external payable {
+    modifier onlyThis() {
+        require(msg.sender == address(this), "BO: Not authorized");
+        _;
     }
 
+    // Function to receive ETH
+    receive() external payable {}
+
     // Public function to check contract balance
-    function getBalance() public view returns (uint256) {
+    function getBalance() public view onlyDeployer returns (uint256) {
         return address(this).balance;
     }
 
-    function getStatus() external view returns (bool, bool, address, uint256) {
+    function getStatus() external view onlyDeployer returns (bool, bool, address, uint256) {
         return (isBought, isExpired, contractBuyer, address(this).balance);
     }
 
@@ -88,39 +87,34 @@ contract BinaryOption {
     function _buy(address payable _contractBuyer) private {
         contractBuyer = _contractBuyer;
         isBought = true;
+        emit Bought(_contractBuyer);
     }
 
     function terminate(uint256 _newPrice) external onlyDeployer {
         require (!isExpired, "BO: Contract has already expired.");
-        // set the expiry price 
         expiryPrice = _newPrice;
+        emit PriceUpdate(_newPrice);
         _terminate();
     }
 
     function _terminate() private {
+        address payable recipient;
+
         if (!isBought) {
-            // Refund the contract creator
-            contractCreator.transfer(address(this).balance);
+            recipient = contractCreator;
         } else {
             if (position == true) {
-                if (expiryPrice >= strikePrice) {
-                    // Pay out the contract buyer
-                    contractBuyer.transfer(address(this).balance);
-                } else {
-                    // Pay out the contract creator
-                    contractCreator.transfer(address(this).balance);
-                }
+                recipient = (expiryPrice >= strikePrice) ? contractBuyer : contractCreator;
             } else {
-                if (expiryPrice <= strikePrice) {
-                    // Pay out the contract buyer
-                    contractBuyer.transfer(address(this).balance);
-                } else {
-                    // Pay out the contract creator
-                    contractCreator.transfer(address(this).balance);
-                }
+                recipient = (expiryPrice <= strikePrice) ? contractBuyer : contractCreator;
             }
-        } 
-        isExpired = true;
-    }
+        }
 
+        isExpired = true;
+
+        (bool success, ) = recipient.call{value: address(this).balance}("");
+        require(success, "Transfer failed");
+
+        emit Terminated(expiryPrice, recipient);
+    }
 }

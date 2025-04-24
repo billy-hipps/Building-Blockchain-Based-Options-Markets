@@ -1,0 +1,5 @@
+Function,Contract,Caller,Gas Used,Timestamp
+Deploy Factory,Factory,Admin,3798349.0,0.029
+Create and Deploy,Factory,Creator,3834100.0,0.0564
+Buy,CreateBO,Buyer,92869.0,0.0256
+Time Update,Factory,Both,395194.0,0.116

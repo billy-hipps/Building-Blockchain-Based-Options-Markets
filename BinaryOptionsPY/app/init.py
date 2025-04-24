@@ -9,12 +9,12 @@ def init():
     w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 
     #==== LOGIN ====
-    creator, accountAddress, privateKey = login()
+    creator, accountAddress, privateKey, factory_address = login()
 
 
     #==== MAIN MENU ====
     while True:
-        home_page(creator, accountAddress, privateKey, w3)
+        home_page(creator, accountAddress, privateKey, factory_address, w3)
 
 
 if __name__ == "__main__":
