@@ -8,6 +8,7 @@ import "./TimeOracle.sol";
 interface IBinaryOption {
     function buy(address payable _contractBuyer) external;
     function getStatus() external view returns (bool, bool, address, uint256);
+    function getWinner() external view returns (string memory);
     function terminate(uint256 _newPrice) external;
 }
 
@@ -24,6 +25,7 @@ contract CreateBO {
     address payable public buyer;
     address public binaryOptionAddress;
     address public immutable timeOracleAddress;
+    string public winner;
 
     bool public isBought;
     bool public isExpired;
@@ -122,7 +124,9 @@ contract CreateBO {
         timeDelta = strikeDate - currentTime;
 
         if (timeDelta <= 0) {
+            isExpired = true;
             IBinaryOption(binaryOptionAddress).terminate(_newPrice);
+            winner = IBinaryOption(binaryOptionAddress).getWinner();
         }
     }
 
@@ -174,4 +178,3 @@ contract CreateBO {
         emit Bought(msg.sender, address(this));
     }
 }
-

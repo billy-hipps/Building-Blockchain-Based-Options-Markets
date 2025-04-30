@@ -10,14 +10,16 @@ from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 from eth_utils import to_bytes, to_hex
 
-from compile import compile
-from stock_data import get_price
+from compile import compile  # Custom compile function
+from stock_data import get_price  # Fetch live asset price
 
-# Utility
+# ==== Utility ====
+# Get current UNIX timestamp
 def fetch_time():
     return int(time.time())
 
-# Init DataFrame
+# ==== Initialize Benchmark Table ====
+# Track function name, caller role, gas used, and execution time
 data = pd.DataFrame({
     'Function': ['Deploy Factory', 'Create and Deploy', 'Buy', 'Time Update'],
     'Contract': ['Factory', 'Factory', 'CreateBO', 'Factory'],
@@ -26,7 +28,7 @@ data = pd.DataFrame({
     'Timestamp': [None]*4
 })
 
-# Accounts
+# ==== Ethereum Test Accounts ====
 admin_acct = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 admin_key = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 
@@ -36,7 +38,7 @@ creator_key = "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690
 buyer_acct = "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC"
 buyer_key = "0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a"
 
-# Web3 Setup
+# ==== Web3 Setup ====
 w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
 w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
@@ -45,7 +47,7 @@ factory_abi = compiledData["Factory"][0]
 factory_bytecode = compiledData["Factory"][1]
 createbo_abi = compiledData["CreateBO"][0]
 
-# Deploy Factory
+# ==== Deploy Factory Contract ====
 factory = w3.eth.contract(abi=factory_abi, bytecode=factory_bytecode)
 nonce = w3.eth.get_transaction_count(admin_acct)
 
@@ -67,14 +69,14 @@ data.loc[data['Function'] == 'Deploy Factory', 'Timestamp'] = round(end - start,
 factory_address = receipt.contractAddress
 factory = w3.eth.contract(address=factory_address, abi=factory_abi)
 
-# Create & Deploy CreateBO
+# ==== Create and Deploy CreateBO Contract ====
 parameters = {
     'ticker': 'AAPL',
     'strike_price': 220,
-    'strike_date': 120,
-    'contract_price': 10,
-    'payout': 20,
-    'position': True
+    'strike_date': 120,  # seconds from now
+    'contract_price': 10,  # in ETH
+    'payout': 20,  # in ETH
+    'position': True  # True = Long
 }
 
 strikeDate = fetch_time() + parameters['strike_date']
@@ -108,7 +110,6 @@ tx = factory.functions.CreateAndDeploy(
     "nonce": nonce,
     "value": payout_in_wei
 })
-
 signed_tx = w3.eth.account.sign_transaction(tx, private_key=creator_key)
 tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
 receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
@@ -121,11 +122,12 @@ if create_bo_address is None:
 data.loc[data['Function'] == 'Create and Deploy', 'Gas Used'] = float(receipt.gasUsed)
 data.loc[data['Function'] == 'Create and Deploy', 'Timestamp'] = round(end - start, 4)
 
-# Buy Contract
+# ==== Buy the Contract ====
 CreateBO = w3.eth.contract(address=create_bo_address, abi=createbo_abi)
 price = CreateBO.functions.contractPrice().call()
 
 nonce = w3.eth.get_transaction_count(buyer_acct)
+
 start = time.time()
 tx = CreateBO.functions.buyContract().build_transaction({
     "from": buyer_acct,
@@ -142,7 +144,7 @@ end = time.time()
 data.loc[data['Function'] == 'Buy', 'Gas Used'] = float(receipt.gasUsed)
 data.loc[data['Function'] == 'Buy', 'Timestamp'] = round(end - start, 4)
 
-# Time Update Scheduler
+# ==== Schedule Time Updates (5 updates) ====
 async def schedule(ticker, strikeDate, deployerAddress, privateKey, contractAddress, abi, w3):
     timeIntervals = []
     startTime = fetch_time()
@@ -182,9 +184,8 @@ async def schedule(ticker, strikeDate, deployerAddress, privateKey, contractAddr
     data.loc[data['Function'] == 'Time Update', 'Gas Used'] = float(total_gas)
     data.loc[data['Function'] == 'Time Update', 'Timestamp'] = round(total_time, 4)
 
-# Run the scheduler
+# ==== Run Scheduler ====
 asyncio.run(schedule(parameters['ticker'], strikeDate, creator_acct, creator_key, create_bo_address, createbo_abi, w3))
 
-# Save to CSV
-data.to_csv("transaction_summary.csv", index=False)
-
+# ==== Save Results ====
+data.to_csv("transaction_summary.csv", index=False)  # Save gas and timing data to CSV

@@ -1,4 +1,0 @@
-1. Implement working Portfolio history window 
-2. Add a variable that stores how a contract settled 
-2. Clean up variable names so they match the report 
-3. Decide on how to carry out the Viva 
