@@ -30,7 +30,7 @@ def generate_random_parameters():
         "position": random.choice(positions),
         "contract_price": random.choice(prices),
         "payout": random.choice(payouts),
-        "strike_date": 600
+        "strike_date": 900
     }
 
 # --- Deployment Logic ---
