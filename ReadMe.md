@@ -2,7 +2,7 @@
 
 ## Description
 
-Implementation of the Ethereum based Binary Options market, described in [Report.pdf](/BinaryOptionsPY/report.pdf).
+Implementation of the Ethereum based Binary Options market, described in [Report.pdf](/BinaryOptionsPY/Report.pdf).
 
 ### Executive Summary
 
