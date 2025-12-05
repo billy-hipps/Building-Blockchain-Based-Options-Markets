@@ -4,6 +4,26 @@
 
 Implementation of the Ethereum based Binary Options market, described in [Report.pdf](./report.pdf).
 
+### Executive Summary
+
+This project delivers a decentralised binary options trading platform designed to eliminate the broker-driven fraud historically associated with retail binary options markets. Traditional brokers have been known to deny payouts or close accounts arbitrarily, creating significant counterparty risk and undermining market integrity. By using blockchain and smart contracts to automate trade execution and settlement, this platform enforces trustless payouts and immutable contract logic, removing the need for intermediaries and ensuring trade outcomes cannot be manipulated. 
+
+Report
+
+The system was built and tested on Ethereum, featuring a suite of Solidity smart contracts, a Factory-based deployment architecture, and secure oracles for time and asset pricing. Comprehensive access controls and security measures ensure that roles, payouts, and oracle data cannot be tampered with. Testing confirmed strong protection against adversarial behaviours, while static analysis validated secure contract design. 
+
+Report
+
+Cost analysis showed that buyers face highly competitive fees—consistently below 0.1% for typical retail trade sizes between $100 and $2,000—comparable to or cheaper than traditional exchanges. Although sellers incur higher gas costs due to contract deployment overhead, the premium is offset by the complete removal of counterparty risk. Performance results also highlight sensitivity to Ethereum network congestion and the benefits of using a dollar-pegged stablecoin in future iterations to improve price predictability. 
+
+Report
+
+The research further outlines a path to expand functionality through automated margining, enabling dynamic risk management and improved capital efficiency while retaining trustless settlement. 
+
+Report
+
+Overall, the findings demonstrate that blockchain offers a commercially viable and security-enhancing alternative for retail derivatives trading. The platform provides fair, transparent, and resilient execution, illustrating the broader potential of decentralised financial infrastructure to reshape markets that depend on trust.
+
 ---
 
 ## Installation
