@@ -64,7 +64,7 @@ npm install --save-dev hardhat
 npx hardhat
 ```
 
-## 🚀 Steps to Use
+## Steps to Use
 
 1. **Start the local blockchain**  
    Open a terminal and run:  
@@ -85,7 +85,7 @@ npx hardhat
 
 ---
 
-## 🧠 Smart Contracts
+## Smart Contracts
 
 - `BinaryOption.sol` – Core contract representing a single binary option with strike price, expiry, and payout logic.
 - `CreateBO.sol` – Handles deployment of a `BinaryOption` contract and stores relevant configuration parameters.
